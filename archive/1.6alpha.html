@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>TRender Public Beta</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+  <div id='fullview'></div>
+  <div class="container">
+  <h1>TRender Public Beta</h1>
+  <h2>Press WASD or Space to start</h2>
+  <div id='canvasdiv'>
+  <canvas width="700" height="500" id="canvas"></canvas>
+  </div>
+  <button id='fullbutton'>Fullscreen</button><br/>
+  <p>FOV: <input type="range" id="fov" min="0" max="1000" value=300 onchange="screendist = document.getElementById('fov').value"></p>
+  <a href='https://trender.doingy.repl.co/'>Home</a>
+  <footer>Created May, 2023<br/>V. 1.7 BETA (Aug 2023)</footer>
+  </div>
+  <script src="1.6alpha.js"></script>
+</body>
+
+</html>
