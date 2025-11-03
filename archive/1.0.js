@@ -62,25 +62,25 @@ document.addEventListener("keypress", function(event) {
   if (event.code == "KeyW") {
     z -= 0.1;
     (async () => {
-      render(loadmodel(await fetchText('/models/cube.mx3')))
+      render(loadmodel(await fetchText('./models/cube.mx3')))
     })()
   }
   else if (event.code == "KeyS") {
     z += 0.1;
     (async () => {
-      render(loadmodel(await fetchText('/models/cube.mx3')))
+      render(loadmodel(await fetchText('./models/cube.mx3')))
     })()
   }
   else if (event.code == "KeyA") {
     x += 10;
     (async () => {
-      render(loadmodel(await fetchText('/models/cube.mx3')))
+      render(loadmodel(await fetchText('./models/cube.mx3')))
     })()
   }
   else if (event.code == "KeyD") {
     x -= 10;
     (async () => {
-      render(loadmodel(await fetchText('/models/cube.mx3')))
+      render(loadmodel(await fetchText('./models/cube.mx3')))
     })()
   }
   else if (event.code == "Space") {
@@ -88,25 +88,25 @@ document.addEventListener("keypress", function(event) {
     setTimeout(function(){
       y -= 25;
       (async () => {
-      render(loadmodel(await fetchText('/models/cube.mx3')))
+      render(loadmodel(await fetchText('./models/cube.mx3')))
       })();
       console.log(y);
       setTimeout(function(){
       y -= 25;
       (async () => {
-      render(loadmodel(await fetchText('/models/cube.mx3')))
+      render(loadmodel(await fetchText('./models/cube.mx3')))
       })();
       console.log(y);
         setTimeout(function(){
       y -= 25;
       (async () => {
-      render(loadmodel(await fetchText('/models/cube.mx3')))
+      render(loadmodel(await fetchText('./models/cube.mx3')))
       })();
       console.log(y);
           setTimeout(function(){
       y -= 25;
       (async () => {
-      render(loadmodel(await fetchText('/models/cube.mx3')))
+      render(loadmodel(await fetchText('./models/cube.mx3')))
       })();
       console.log(y);
     }, 100);
