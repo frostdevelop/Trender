@@ -1,6 +1,7 @@
 //TODO: Add projection matrix
 //TODO: Add scene file format
 //TODO: Fix scene format to use universal vertex list
+//Elevator imperfect, no force transfer
 let models;
 var canvas = document.getElementById("canvas");
 const canvasElm = document.getElementById('fullview');
@@ -9,6 +10,7 @@ const fovElm = document.getElementById('tr-fov');
 const faceChk = document.getElementById('tr-facechk');
 const vertChk = document.getElementById('tr-vertchk');
 const statChk = document.getElementById('tr-statchk');
+const resetBall = document.getElementById('tr-resetball');
 let x = 0;
 let y = 0;
 let z = 0;
@@ -16,7 +18,6 @@ var height = 2.5;
 let canvasWidth = canvas.width;
 let canvasHeight = canvas.height;
 let canvasAspect = canvasHeight/canvasWidth;
-var fallCurve = 0;
 var url = './models/Test.obj';
 var version = 1.1;
 let yang = 0;
@@ -44,16 +45,18 @@ let upkey = false;
 let downkey = false;
 let rup = false;
 let rdown = false;
-let gravity = false;
 var facetorender = [];
 var setverts = [];
 let cursorX = 0;
 let cursorY = 0;
 let someVar = Math.tan(1.57079632679*screendist);
+const playerVelocity = [0,0,0];
+let playerForce = [0,-0.1,0];
 const text = `Loading [${url}]`;
 
 let sphereForce = [0,0,0];
 let sphereVelocity = [0,0,0];
+const gravityForce = 0.01;
 
 fetch(url).then(async e=>{
   console.log('MODEL LOADED');
@@ -154,19 +157,83 @@ function looprender() {
   if (rright) 
     yang += 0.03;
   if (upkey)
-    y-=playerSpeed;
+    y-=playerSpeed,playerForce[1]=gravityForce;
   if (downkey)
-    y+=playerSpeed;
+    y+=playerSpeed,playerForce[1]=gravityForce;
   if (rup)
     xang -= 0.03,tnxang = -Math.tan(xang);
   if (rdown)
     xang += 0.03,tnxang = -Math.tan(xang);
-  if(gravity){
-    y -= fallCurve;
-    fallCurve += 0.03;
-    y<=0 && (fallCurve=-(fallCurve/1.8));
-    Math.abs(fallCurve)<=0.1 && Math.abs(y)<=0.1 && (gravity=false,y=0);
+  playerForce[1] -= gravityForce;
+  playerVelocity[1] += playerForce[1];
+  y += playerVelocity[1];
+  playerForce[1] = 0;
+  if(vectorDistance([x,y,z],cubes[1][1]) <= 3.5){
+    const direction = [cubes[1][1][0]-x,cubes[1][1][1]-y,cubes[1][1][2]-z];
+    const distance = vectorDistance(direction,[0,0,0]);
+    x = cubes[1][1][0]-(3.5*direction[0]/distance);
+    y = cubes[1][1][1]-(3.5*direction[1]/distance);
+    z = cubes[1][1][2]-(3.5*direction[2]/distance);
+    playerForce[1] = gravityForce;
+    playerVelocity[1] = 0;
+  }else if(vectorDistance([x,y,z],cubes[3][1]) <= 2.5){
+    const direction = [cubes[3][1][0]-x,cubes[3][1][1]-y,cubes[3][1][2]-z];
+    const distance = vectorDistance(direction,[0,0,0]);
+    x = cubes[3][1][0]-(2.5*direction[0]/distance);
+    y = cubes[3][1][1]-(2.5*direction[1]/distance);
+    z = cubes[3][1][2]-(2.5*direction[2]/distance);
+    playerForce[1] = gravityForce;
+    playerVelocity[1] = 0;
+  }else if(vectorDistance([x,0,z],[cubes[4][1][0],0,cubes[4][1][2]]) <= 1){
+    const direction = [cubes[4][1][0]-x,cubes[4][1][1]-y,cubes[4][1][2]-z];
+    const distance = vectorDistance(direction,[0,0,0]);
+    x = cubes[4][1][0]-(direction[0]/distance);
+    y = cubes[4][1][1]-(direction[1]/distance);
+    z = cubes[4][1][2]-(direction[2]/distance);
+    playerForce[1] = gravityForce;
+    playerVelocity[1] = 0;
+  }else if(vectorDistance([x,0,z],[cubes[5][1][0],0,cubes[5][1][2]]) <= 1){
+    const direction = [cubes[5][1][0]-x,cubes[5][1][1]-y,cubes[5][1][2]-z];
+    const distance = vectorDistance(direction,[0,0,0]);
+    x = cubes[5][1][0]-(direction[0]/distance);
+    y = cubes[5][1][1]-(direction[1]/distance);
+    z = cubes[5][1][2]-(direction[2]/distance);
+    playerForce[1] = gravityForce;
+    playerVelocity[1] = 0;
+  }else if(vectorDistance([x,0,z],[cubes[6][1][0],0,cubes[6][1][2]]) <= 1){
+    const direction = [cubes[6][1][0]-x,cubes[6][1][1]-y,cubes[6][1][2]-z];
+    const distance = vectorDistance(direction,[0,0,0]);
+    x = cubes[6][1][0]-(direction[0]/distance);
+    y = cubes[6][1][1]-(direction[1]/distance);
+    z = cubes[6][1][2]-(direction[2]/distance);
+    playerForce[1] = gravityForce;
+    playerVelocity[1] = 0;
+  }else if(vectorDistance([x,0,z],[cubes[7][1][0],0,cubes[7][1][2]]) <= 1){
+    const direction = [cubes[7][1][0]-x,cubes[7][1][1]-y,cubes[7][1][2]-z];
+    const distance = vectorDistance(direction,[0,0,0]);
+    x = cubes[7][1][0]-(direction[0]/distance);
+    y = cubes[7][1][1]-(direction[1]/distance);
+    z = cubes[7][1][2]-(direction[2]/distance);
+    playerForce[1] = gravityForce;
+    playerVelocity[1] = 0;
+  }else if(vectorDistance([x,0,z],[cubes[8][1][0],0,cubes[8][1][2]]) <= 1){
+    const direction = [cubes[8][1][0]-x,cubes[8][1][1]-y,cubes[8][1][2]-z];
+    const distance = vectorDistance(direction,[0,0,0]);
+    x = cubes[8][1][0]-(direction[0]/distance);
+    y = cubes[8][1][1]-(direction[1]/distance);
+    z = cubes[8][1][2]-(direction[2]/distance);
+    playerForce[1] = gravityForce;
+    playerVelocity[1] = 0;
+  }else if(vectorDistance([x,0,z],[cubes[9][1][0],0,cubes[9][1][2]]) <= 1){
+    const direction = [cubes[9][1][0]-x,cubes[9][1][1]-y,cubes[9][1][2]-z];
+    const distance = vectorDistance(direction,[0,0,0]);
+    x = cubes[9][1][0]-(direction[0]/distance);
+    y = cubes[9][1][1]-(direction[1]/distance);
+    z = cubes[9][1][2]-(direction[2]/distance);
+    playerForce[1] = gravityForce;
+    playerVelocity[1] = 0;
   }
+  y <= 0 && (playerForce[1] = gravityForce,y = 0,playerVelocity[1] = 0);//-y*0.5
   cursorY != 0 && (xang+=cursorY/100) && (tnxang = -Math.tan(xang)) && (cursorY = 0);
   yang+=cursorX/100;
   cursorX = 0;
@@ -184,18 +251,10 @@ function rotateVert(vert,xang,yang){
 }
 function animate(scene){
   //const mass = 1;
-  sphereForce[0] = -sphereVelocity[0]/50;
-  sphereForce[1] = -0.01-sphereVelocity[1]/50;
-  sphereForce[2] = -sphereVelocity[2]/50;
-  scene[2][1][1] <= 1 && (scene[2][1][1] = 1,sphereForce[1] = -sphereVelocity[1]*0.75,sphereVelocity[1] = 0,sphereForce[1]<=0.03 && (sphereForce[1]=0));
-  if(vectorDistance(scene[2][1],[x,scene[2][1][1],z]) <= 1.5){
-    const direction = [scene[2][1][0]-x,scene[2][1][1]-(y+0.4),scene[2][1][2]-z];
-    const distance = vectorDistance(direction,[0,0,0]);
-    const normal = [direction[0]/distance,direction[1]/distance,direction[2]/distance];
-    sphereForce[0] = normal[0]/50;
-    sphereForce[1] = normal[1]/50;
-    sphereForce[2] = normal[2]/50;
-  }
+  sphereForce[0] -= sphereVelocity[0]/50;
+  sphereForce[1] -= 0.01+sphereVelocity[1]/50;
+  sphereForce[2] -= sphereVelocity[2]/50;
+  console.log(sphereForce);
   sphereVelocity[0] += sphereForce[0];
   sphereVelocity[1] += sphereForce[1];
   sphereVelocity[2] += sphereForce[2];
@@ -205,7 +264,60 @@ function animate(scene){
   scene[2][2][0] = 1+sphereVelocity[0];
   scene[2][2][1] = 1+sphereVelocity[1];
   scene[2][2][2] = 1+sphereVelocity[2];
-
+  sphereForce = [0,0,0];
+  scene[2][1][1] <= 1 && (scene[2][1][1] = 1,sphereVelocity[1] = -0.75*sphereVelocity[1],sphereVelocity[1]<=0.03 && (sphereVelocity[1]=0)); //sphereForce[1] = 0.01-sphereVelocity[1]*0.75
+  if(vectorDistance(scene[2][1],[x,scene[2][1][1],z]) <= 1.5){
+    const direction = [scene[2][1][0]-x,scene[2][1][1]-(y+0.4),scene[2][1][2]-z];
+    const distance = vectorDistance(direction,[0,0,0]);
+    sphereForce = [0.02*direction[0]/distance,0.05*direction[1]/distance,0.02*direction[2]/distance];
+  }else if(vectorDistance(scene[2][1],scene[1][1]) <= 4.5){
+    const direction = [scene[2][1][0]-scene[1][1][0],scene[2][1][1]-scene[1][1][1],scene[2][1][2]-scene[1][1][2]];
+    //const direction = [scene[1][1][0]-scene[2][1][0],scene[1][1][1]-scene[2][1][1],scene[1][1][2]-scene[2][1][2]];
+    const distance = vectorDistance(direction,[0,0,0]);
+    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+    /*
+    const p = 2*(sphereVelocity[0]*(direction[0]/distance)+sphereVelocity[1]*(direction[1]/distance)+sphereVelocity[2]*(direction[2]/distance));
+    sphereVelocity[0] -= p*(direction[0]/distance);
+    sphereVelocity[1] -= p*(direction[1]/distance);
+    sphereVelocity[2] -= p*(direction[2]/distance);
+    */
+  }else if(vectorDistance(scene[2][1],scene[3][1]) <= 2){
+    const direction = [scene[2][1][0]-scene[3][1][0],scene[2][1][1]-scene[3][1][1],scene[2][1][2]-scene[3][1][2]];
+    const distance = vectorDistance(direction,[0,0,0]);
+    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[4][1][0],0,scene[4][1][2]]) <= 1.5){
+    const direction = [scene[2][1][0]-scene[4][1][0],scene[2][1][1]-scene[4][1][1],scene[2][1][2]-scene[4][1][2]];
+    const distance = vectorDistance(direction,[0,0,0]);
+    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[5][1][0],0,scene[5][1][2]]) <= 1.5){
+    const direction = [scene[2][1][0]-scene[5][1][0],scene[2][1][1]-scene[5][1][1],scene[2][1][2]-scene[5][1][2]];
+    const distance = vectorDistance(direction,[0,0,0]);
+    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[6][1][0],0,scene[6][1][2]]) <= 1.5){
+    const direction = [scene[2][1][0]-scene[6][1][0],scene[2][1][1]-scene[6][1][1],scene[2][1][2]-scene[6][1][2]];
+    const distance = vectorDistance(direction,[0,0,0]);
+    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[7][1][0],0,scene[7][1][2]]) <= 1.5){
+    const direction = [scene[2][1][0]-scene[7][1][0],scene[2][1][1]-scene[7][1][1],scene[2][1][2]-scene[7][1][2]];
+    const distance = vectorDistance(direction,[0,0,0]);
+    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[8][1][0],0,scene[8][1][2]]) <= 1.5){
+    const direction = [scene[2][1][0]-scene[8][1][0],scene[2][1][1]-scene[8][1][1],scene[2][1][2]-scene[8][1][2]];
+    const distance = vectorDistance(direction,[0,0,0]);
+    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[9][1][0],0,scene[9][1][2]]) <= 1.5){
+    const direction = [scene[2][1][0]-scene[9][1][0],scene[2][1][1]-scene[9][1][1],scene[2][1][2]-scene[9][1][2]];
+    const distance = vectorDistance(direction,[0,0,0]);
+    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+  }
   scene[3][1][1] = (Math.sin(Date.now()/1000)*5)+5.5;
   scene[3][3][1] += 0.01;
   scene[0][3][0] += 0.1;
@@ -230,8 +342,10 @@ function renderscene(scene) {
   if(statsen)
     ctx.font = '25px Poppins',
       ctx.fillStyle = 'black',
-      ctx.fillText(`Verts: ${vertcount}, Faces: ${facecount}`, 20, 65),
-      ctx.fillText(`X: ${x.toFixed(1)}, Y: ${y.toFixed(1)}, Z: ${z.toFixed(1)}, AY: ${yang.toFixed(1)}, AX: ${xang.toFixed(1)}, V: ${fallCurve.toFixed(1)}`, 20, 30);
+      ctx.fillText(`BallV: ${sphereVelocity[0].toFixed(3)} ${sphereVelocity[1].toFixed(3)} ${sphereVelocity[2].toFixed(3)}`, 20, 65),
+      //ctx.fillText(`BallF: ${sphereForce[0].toFixed(3)} ${sphereForce[1].toFixed(3)} ${sphereForce[2].toFixed(3)}`, 20, 100),
+      ctx.fillText(`Verts: ${vertcount}, Faces: ${facecount}`, 20, 100),
+      ctx.fillText(`X: ${x.toFixed(1)}, Y: ${y.toFixed(1)}, Z: ${z.toFixed(1)}, AY: ${yang.toFixed(1)}, AX: ${xang.toFixed(1)}`, 20, 30);
 };
 
 function render(inputs,position=[0,0,0],scale=[1,1,1],rotation=[0,0,0]) {
@@ -316,13 +430,14 @@ document.addEventListener("keydown", (event) => {
     break;
   case 81:
     upkey = true;
+    playerVelocity[1] = 0;
     break;
   case 69:
     downkey = true;
+    playerVelocity[1] = 0;
     break;
   case 32:
-    fallCurve=-0.5;
-    gravity=true;
+    playerForce[1] = 0.3;
     break;	
   case 37:
     rleft = true;
@@ -382,6 +497,7 @@ canvas.addEventListener('mousemove',mouseMovement);
 canvas.addEventListener('click',lockRequest);
 canvasElm.addEventListener('click',lockRequest);
 canvasElm.addEventListener('mousemove',mouseMovement);
+resetBall.addEventListener('click',()=>{sphereVelocity=[0,0,0];sphereForce=[0,0,0];cubes[2][1]=[0,10,5];})
 ctx.font = '25px Arial';
 ctx.fillStyle = 'black';
 ctx.fillText(text, (canvas.width/2)-text.length*6, (canvas.height/2)-25);
