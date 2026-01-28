@@ -2,37 +2,44 @@
 //TODO: Add scene file format
 //TODO: Fix scene format to use universal vertex list
 //Elevator imperfect, no force transfer
+//TODO: Add standard collider class with +cube collider for bounding boxes.
+//TODO: Make collision repsonse accurate with correct interactions between player and stuff
 let models;
-var canvas = document.getElementById("canvas");
+let canvas = document.getElementById("canvas");
 const canvasElm = document.getElementById('fullview');
-var ctx = canvas.getContext("2d");
+let ctx = canvas.getContext("2d");
 const fovElm = document.getElementById('tr-fov');
 const faceChk = document.getElementById('tr-facechk');
+const edgeChk = document.getElementById('tr-edgechk');
 const vertChk = document.getElementById('tr-vertchk');
 const statChk = document.getElementById('tr-statchk');
+const plockChk = document.getElementById('tr-plockchk');
 const resetBall = document.getElementById('tr-resetball');
+const halfPi = Math.PI/2;
 let x = 0;
 let y = 0;
 let z = 0;
-var height = 2.5;
+let playerHeight = 2.5;
+let playerHeightH = playerHeight/2;
 let canvasWidth = canvas.width;
 let canvasHeight = canvas.height;
 let canvasAspect = canvasHeight/canvasWidth;
-var url = './models/Test.obj';
-var version = 1.1;
+let url = './models/Test.obj';
+const version = 1.9;
 let yang = 0;
 let xang = 0;
+let settingLockPitch = true;
 let tnxang = Math.tan(xang);
-var color = 'black';
-var colorraw = Array.from({length: 3}, () => Math.floor(Math.random() * 90));
+let horizonDirection = true;
+const colorraw = Array.from({length: 3}, () => Math.floor(Math.random() * 90));
 let cubes;
 let facesen = true;
 let statsen = true;
 let vertsen = false;
-var outen = false;
+let edgesen = false;
 var screendist = 0.5;
 //const gravityForce = 0.05;
-let playerSpeed = 0.25;
+let playerSpeed = 0.15;
 let centerx = canvas.width/2;
 let centery = canvas.height/2;
 let forewardkey = false;
@@ -45,19 +52,16 @@ let upkey = false;
 let downkey = false;
 let rup = false;
 let rdown = false;
-var facetorender = [];
-var setverts = [];
-let cursorX = 0;
-let cursorY = 0;
+let facetorender = [];
+let setverts = [];
 let someVar = Math.tan(1.57079632679*screendist);
 const playerVelocity = [0,0,0];
 let playerForce = [0,-0.1,0];
-const text = `Loading [${url}]`;
+const text = 'Loading ['+url+']';
 
 let sphereForce = [0,0,0];
 let sphereVelocity = [0,0,0];
 const gravityForce = 0.01;
-
 fetch(url).then(async e=>{
   console.log('MODEL LOADED');
   models = loadObj(await e.text());
@@ -161,9 +165,9 @@ function looprender() {
   if (downkey)
     y+=playerSpeed,playerForce[1]=gravityForce;
   if (rup)
-    xang -= 0.03,tnxang = -Math.tan(xang);
+    xang -= 0.03,tnxang = -Math.tan(xang),horizonDirection = xang<-halfPi ? Math.round(xang/Math.PI)%2===0 : xang>halfPi ? Math.ceil((xang-halfPi)/Math.PI)%2===0 : true; // ? Math.tan(xang) : 
   if (rdown)
-    xang += 0.03,tnxang = -Math.tan(xang);
+    xang += 0.03,tnxang = -Math.tan(xang),horizonDirection = xang<-halfPi ? Math.round(xang/Math.PI)%2===0 : xang>halfPi ? Math.ceil((xang-halfPi)/Math.PI)%2===0 : true;
   playerForce[1] -= gravityForce;
   playerVelocity[1] += playerForce[1];
   y += playerVelocity[1];
@@ -184,61 +188,40 @@ function looprender() {
     z = cubes[3][1][2]-(2.5*direction[2]/distance);
     playerForce[1] = gravityForce;
     playerVelocity[1] = 0;
-  }else if(vectorDistance([x,0,z],[cubes[4][1][0],0,cubes[4][1][2]]) <= 1){
-    const direction = [cubes[4][1][0]-x,cubes[4][1][1]-y,cubes[4][1][2]-z];
+  }else if(vectorDistance([x,0,z],[cubes[4][1][0],0,cubes[4][1][2]]) <= 1 && y<=pillarHeight){
+    const direction = [cubes[4][1][0]-x,0,cubes[4][1][2]-z];
     const distance = vectorDistance(direction,[0,0,0]);
     x = cubes[4][1][0]-(direction[0]/distance);
-    y = cubes[4][1][1]-(direction[1]/distance);
     z = cubes[4][1][2]-(direction[2]/distance);
-    playerForce[1] = gravityForce;
-    playerVelocity[1] = 0;
-  }else if(vectorDistance([x,0,z],[cubes[5][1][0],0,cubes[5][1][2]]) <= 1){
-    const direction = [cubes[5][1][0]-x,cubes[5][1][1]-y,cubes[5][1][2]-z];
+  }else if(vectorDistance([x,0,z],[cubes[5][1][0],0,cubes[5][1][2]]) <= 1 && y<=pillarHeight){
+    const direction = [cubes[5][1][0]-x,0,cubes[5][1][2]-z];
     const distance = vectorDistance(direction,[0,0,0]);
     x = cubes[5][1][0]-(direction[0]/distance);
-    y = cubes[5][1][1]-(direction[1]/distance);
     z = cubes[5][1][2]-(direction[2]/distance);
-    playerForce[1] = gravityForce;
-    playerVelocity[1] = 0;
-  }else if(vectorDistance([x,0,z],[cubes[6][1][0],0,cubes[6][1][2]]) <= 1){
-    const direction = [cubes[6][1][0]-x,cubes[6][1][1]-y,cubes[6][1][2]-z];
+  }else if(vectorDistance([x,0,z],[cubes[6][1][0],0,cubes[6][1][2]]) <= 1 && y<=pillarHeight){
+    const direction = [cubes[6][1][0]-x,0,cubes[6][1][2]-z];
     const distance = vectorDistance(direction,[0,0,0]);
     x = cubes[6][1][0]-(direction[0]/distance);
-    y = cubes[6][1][1]-(direction[1]/distance);
     z = cubes[6][1][2]-(direction[2]/distance);
-    playerForce[1] = gravityForce;
-    playerVelocity[1] = 0;
-  }else if(vectorDistance([x,0,z],[cubes[7][1][0],0,cubes[7][1][2]]) <= 1){
-    const direction = [cubes[7][1][0]-x,cubes[7][1][1]-y,cubes[7][1][2]-z];
+  }else if(vectorDistance([x,0,z],[cubes[7][1][0],0,cubes[7][1][2]]) <= 1 && y<=pillarHeight){
+    const direction = [cubes[7][1][0]-x,0,cubes[7][1][2]-z];
     const distance = vectorDistance(direction,[0,0,0]);
     x = cubes[7][1][0]-(direction[0]/distance);
-    y = cubes[7][1][1]-(direction[1]/distance);
     z = cubes[7][1][2]-(direction[2]/distance);
-    playerForce[1] = gravityForce;
-    playerVelocity[1] = 0;
-  }else if(vectorDistance([x,0,z],[cubes[8][1][0],0,cubes[8][1][2]]) <= 1){
-    const direction = [cubes[8][1][0]-x,cubes[8][1][1]-y,cubes[8][1][2]-z];
+  }else if(vectorDistance([x,0,z],[cubes[8][1][0],0,cubes[8][1][2]]) <= 1 && y<=pillarHeight){
+    const direction = [cubes[8][1][0]-x,0,cubes[8][1][2]-z];
     const distance = vectorDistance(direction,[0,0,0]);
     x = cubes[8][1][0]-(direction[0]/distance);
-    y = cubes[8][1][1]-(direction[1]/distance);
     z = cubes[8][1][2]-(direction[2]/distance);
-    playerForce[1] = gravityForce;
-    playerVelocity[1] = 0;
-  }else if(vectorDistance([x,0,z],[cubes[9][1][0],0,cubes[9][1][2]]) <= 1){
-    const direction = [cubes[9][1][0]-x,cubes[9][1][1]-y,cubes[9][1][2]-z];
+  }else if(vectorDistance([x,0,z],[cubes[9][1][0],0,cubes[9][1][2]]) <= 1 && y<=pillarHeight){
+    const direction = [cubes[9][1][0]-x,0,cubes[9][1][2]-z];
     const distance = vectorDistance(direction,[0,0,0]);
     x = cubes[9][1][0]-(direction[0]/distance);
-    y = cubes[9][1][1]-(direction[1]/distance);
     z = cubes[9][1][2]-(direction[2]/distance);
-    playerForce[1] = gravityForce;
-    playerVelocity[1] = 0;
   }
   y <= 0 && (playerForce[1] = gravityForce,y = 0,playerVelocity[1] = 0);//-y*0.5
-  cursorY != 0 && (xang+=cursorY/100) && (tnxang = -Math.tan(xang)) && (cursorY = 0);
-  yang+=cursorX/100;
-  cursorX = 0;
-  renderscene(cubes)
-  animate(cubes)
+  renderscene(cubes);
+  animate(cubes);
   window.requestAnimationFrame(looprender)
 }
 function vectorDistance(v1,v2){
@@ -254,7 +237,6 @@ function animate(scene){
   sphereForce[0] -= sphereVelocity[0]/50;
   sphereForce[1] -= 0.01+sphereVelocity[1]/50;
   sphereForce[2] -= sphereVelocity[2]/50;
-  console.log(sphereForce);
   sphereVelocity[0] += sphereForce[0];
   sphereVelocity[1] += sphereForce[1];
   sphereVelocity[2] += sphereForce[2];
@@ -266,7 +248,13 @@ function animate(scene){
   scene[2][2][2] = 1+sphereVelocity[2];
   sphereForce = [0,0,0];
   scene[2][1][1] <= 1 && (scene[2][1][1] = 1,sphereVelocity[1] = -0.75*sphereVelocity[1],sphereVelocity[1]<=0.03 && (sphereVelocity[1]=0)); //sphereForce[1] = 0.01-sphereVelocity[1]*0.75
-  if(vectorDistance(scene[2][1],[x,scene[2][1][1],z]) <= 1.5){
+  /*
+  DoubleSphere: vectorDistance(scene[2][1],[x,y,z]) <= 2 || vectorDistance(scene[2][1],[x,y+1,z]) <= 2
+  InfiCylin: vectorDistance(scene[2][1],[x,scene[2][1][1],z]) <= 1.5
+  Intersection: vectorDistance(scene[2][1],[x,y+playerHeightH,z]) <= playerHeightH+1 && vectorDistance(scene[2][1],[x,scene[2][1][1],z]) <= 1.5
+  Cylinder: vectorDistance(scene[2][1],[x,scene[2][1][1],z]) <= 1.5 && Math.abs(scene[2][1][1]-(y+playerHeightH)) <= playerHeightH+1
+  */
+  if(vectorDistance(scene[2][1],[x,scene[2][1][1],z]) <= 1.5 && Math.abs(scene[2][1][1]-(y+playerHeightH)) <= playerHeightH+1){
     const direction = [scene[2][1][0]-x,scene[2][1][1]-(y+0.4),scene[2][1][2]-z];
     const distance = vectorDistance(direction,[0,0,0]);
     sphereForce = [0.02*direction[0]/distance,0.05*direction[1]/distance,0.02*direction[2]/distance];
@@ -287,36 +275,38 @@ function animate(scene){
     const distance = vectorDistance(direction,[0,0,0]);
     const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
     sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
-  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[4][1][0],0,scene[4][1][2]]) <= 1.5){
-    const direction = [scene[2][1][0]-scene[4][1][0],scene[2][1][1]-scene[4][1][1],scene[2][1][2]-scene[4][1][2]];
-    const distance = vectorDistance(direction,[0,0,0]);
-    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
-    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
-  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[5][1][0],0,scene[5][1][2]]) <= 1.5){
-    const direction = [scene[2][1][0]-scene[5][1][0],scene[2][1][1]-scene[5][1][1],scene[2][1][2]-scene[5][1][2]];
-    const distance = vectorDistance(direction,[0,0,0]);
-    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
-    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
-  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[6][1][0],0,scene[6][1][2]]) <= 1.5){
-    const direction = [scene[2][1][0]-scene[6][1][0],scene[2][1][1]-scene[6][1][1],scene[2][1][2]-scene[6][1][2]];
-    const distance = vectorDistance(direction,[0,0,0]);
-    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
-    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
-  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[7][1][0],0,scene[7][1][2]]) <= 1.5){
-    const direction = [scene[2][1][0]-scene[7][1][0],scene[2][1][1]-scene[7][1][1],scene[2][1][2]-scene[7][1][2]];
-    const distance = vectorDistance(direction,[0,0,0]);
-    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
-    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
-  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[8][1][0],0,scene[8][1][2]]) <= 1.5){
-    const direction = [scene[2][1][0]-scene[8][1][0],scene[2][1][1]-scene[8][1][1],scene[2][1][2]-scene[8][1][2]];
-    const distance = vectorDistance(direction,[0,0,0]);
-    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
-    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
-  }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[9][1][0],0,scene[9][1][2]]) <= 1.5){
-    const direction = [scene[2][1][0]-scene[9][1][0],scene[2][1][1]-scene[9][1][1],scene[2][1][2]-scene[9][1][2]];
-    const distance = vectorDistance(direction,[0,0,0]);
-    const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
-    sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+  }else if(scene[2][1][1] <= pillarHeight+1){//Approx it with a static upper bound cylinder
+    if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[4][1][0],0,scene[4][1][2]]) <= 1.5){
+      const direction = [scene[2][1][0]-scene[4][1][0],scene[2][1][1]-scene[4][1][1],scene[2][1][2]-scene[4][1][2]];
+      const distance = vectorDistance(direction,[0,0,0]);
+      const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+      sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+    }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[5][1][0],0,scene[5][1][2]]) <= 1.5){
+      const direction = [scene[2][1][0]-scene[5][1][0],scene[2][1][1]-scene[5][1][1],scene[2][1][2]-scene[5][1][2]];
+      const distance = vectorDistance(direction,[0,0,0]);
+      const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+      sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+    }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[6][1][0],0,scene[6][1][2]]) <= 1.5){
+      const direction = [scene[2][1][0]-scene[6][1][0],scene[2][1][1]-scene[6][1][1],scene[2][1][2]-scene[6][1][2]];
+      const distance = vectorDistance(direction,[0,0,0]);
+      const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+      sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+    }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[7][1][0],0,scene[7][1][2]]) <= 1.5){
+      const direction = [scene[2][1][0]-scene[7][1][0],scene[2][1][1]-scene[7][1][1],scene[2][1][2]-scene[7][1][2]];
+      const distance = vectorDistance(direction,[0,0,0]);
+      const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+      sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+    }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[8][1][0],0,scene[8][1][2]]) <= 1.5){
+      const direction = [scene[2][1][0]-scene[8][1][0],scene[2][1][1]-scene[8][1][1],scene[2][1][2]-scene[8][1][2]];
+      const distance = vectorDistance(direction,[0,0,0]);
+      const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+      sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+    }else if(vectorDistance([scene[2][1][0],0,scene[2][1][2]],[scene[9][1][0],0,scene[9][1][2]]) <= 1.5){
+      const direction = [scene[2][1][0]-scene[9][1][0],scene[2][1][1]-scene[9][1][1],scene[2][1][2]-scene[9][1][2]];
+      const distance = vectorDistance(direction,[0,0,0]);
+      const magnitude = vectorDistance(sphereVelocity,[0,0,0])*0.5;
+      sphereForce = [magnitude*direction[0]/distance,magnitude*direction[1]/distance,magnitude*direction[2]/distance];
+    }
   }
   scene[3][1][1] = (Math.sin(Date.now()/1000)*5)+5.5;
   scene[3][3][1] += 0.01;
@@ -327,8 +317,11 @@ function renderscene(scene) {
   ctx.fillStyle = '#00aeff';
   ctx.fillRect(0,0,canvas.width,canvasHeight);
   ctx.fillStyle = '#696';
-  const gpos = centery+centery*tnxang*someVar+y*canvasHeight/100; //(1*screendist-Math.cos(xang*2))*centery xang*canvasHeight*screendist
-  ctx.fillRect(0,gpos,canvas.width,canvasHeight-gpos);
+  const gpos = Math.max(centery+centery*tnxang*someVar+y*canvasHeight/100,0); //(1*screendist-Math.cos(xang*2))*centery xang*canvasHeight*screendist
+  if(horizonDirection)
+  	ctx.fillRect(0,gpos,canvas.width,canvasHeight-gpos);
+  else
+  	ctx.fillRect(0,0,canvas.width,gpos);
   let vertcount = 0;
   let facecount = 0;
   facetorender = [];
@@ -342,10 +335,10 @@ function renderscene(scene) {
   if(statsen)
     ctx.font = '25px Poppins',
       ctx.fillStyle = 'black',
-      ctx.fillText(`BallV: ${sphereVelocity[0].toFixed(3)} ${sphereVelocity[1].toFixed(3)} ${sphereVelocity[2].toFixed(3)}`, 20, 65),
-      //ctx.fillText(`BallF: ${sphereForce[0].toFixed(3)} ${sphereForce[1].toFixed(3)} ${sphereForce[2].toFixed(3)}`, 20, 100),
-      ctx.fillText(`Verts: ${vertcount}, Faces: ${facecount}`, 20, 100),
-      ctx.fillText(`X: ${x.toFixed(1)}, Y: ${y.toFixed(1)}, Z: ${z.toFixed(1)}, AY: ${yang.toFixed(1)}, AX: ${xang.toFixed(1)}`, 20, 30);
+      ctx.fillText('BallV: '+sphereVelocity[0].toFixed(3)+' '+sphereVelocity[1].toFixed(3)+' '+sphereVelocity[2].toFixed(3), 20, 65),
+      //ctx.fillText('BallF: '+sphereForce[0].toFixed(3)+' '+sphereForce[1].toFixed(3)+' '+sphereForce[2].toFixed(3), 20, 100),
+      ctx.fillText('Verts: '+vertcount+', Faces: '+facecount, 20, 100),
+      ctx.fillText('X: '+x.toFixed(1)+', Y: '+y.toFixed(1)+', Z: '+z.toFixed(1)+', AY: '+yang.toFixed(1)+', AX: '+xang.toFixed(1), 20, 30);
 };
 
 function render(inputs,position=[0,0,0],scale=[1,1,1],rotation=[0,0,0]) {
@@ -358,7 +351,7 @@ function render(inputs,position=[0,0,0],scale=[1,1,1],rotation=[0,0,0]) {
     let nv = [verts[i][0]*scale[0],verts[i][1]*scale[1],verts[i][2]*scale[2]];
     (rotation[0] != 0 || rotation[1] != 0) && (nv = [nv[0] * Math.cos(rotation[1]) + nv[2] * Math.sin(rotation[1]), nv[1], nv[2] * Math.cos(rotation[1]) - nv[0] * Math.sin(rotation[1])],nv = [nv[0], nv[1] * Math.cos(rotation[0]) - nv[2] * Math.sin(rotation[0]), nv[1] * Math.sin(rotation[0]) + nv[2] * Math.cos(rotation[0])]);
     const realz = ((nv[2]+position[2])-z)*canvasHeight;
-    const realy = (-(nv[1]+position[1]-y)+height)*canvasHeight;
+    const realy = (-(nv[1]+position[1]-y)+playerHeight)*canvasHeight;
     const realx = ((nv[0]+position[0])-x)*canvasHeight;
     const rx = realx * Math.cos(-yang) + realz * Math.sin(-yang);
     let rz = realz * Math.cos(-yang) - realx * Math.sin(-yang);
@@ -369,7 +362,7 @@ function render(inputs,position=[0,0,0],scale=[1,1,1],rotation=[0,0,0]) {
     rverts[i][1] = (ry/rz)*screendist*canvasHeight+centery;
     rverts[i][2] = rz;
     if(vertsen)
-      ctx.fillStyle=color,
+      ctx.fillStyle='black',
         ctx.fillRect(rverts[i][0], rverts[i][1], 5, 5);
   }
   setverts.push(rverts);
@@ -377,10 +370,9 @@ function render(inputs,position=[0,0,0],scale=[1,1,1],rotation=[0,0,0]) {
   if (facesen) {
     for (let i = 0; i < faces.length; i++) {
       let totalz = 0;
-      let totalnum = faces[i][0].length;
-      for (let j = 0; j < totalnum; j++) {
+      const totalnum = faces[i][0].length;
+      for (let j = 0; j < totalnum; j++)
         totalz += rverts[faces[i][0][j]][2];
-      }
       let average = totalz/totalnum;
       facetorender.push([faces[i][0],average,setverts.length-1, 1])
     }
@@ -388,11 +380,11 @@ function render(inputs,position=[0,0,0],scale=[1,1,1],rotation=[0,0,0]) {
 }
 
 function depthrand(rfaces, i) {
-  return `rgb(${(colorraw[0])+(i*110/rfaces.length)},${(colorraw[1])+(i*110/rfaces.length)},${(colorraw[2])+(i*110/rfaces.length)})`;
+  return 'rgb('+((colorraw[0])+(i*110/rfaces.length)).toString()+','+((colorraw[1])+(i*110/rfaces.length)).toString()+','+((colorraw[2])+(i*110/rfaces.length)).toString()+')';
 }
 
 function depthclr(rfaces, i) {
-  return `rgb(${(rfaces[i][4][0])+(i*110/rfaces.length)},${(rfaces[i][4][1])+(i*110/rfaces.length)},${(rfaces[i][4][2])+(i*110/rfaces.length)})`;
+  return 'rgb('+((rfaces[i][4][0])+(i*110/rfaces.length)).toString()+','+((rfaces[i][4][1])+(i*110/rfaces.length)).toString()+','+((rfaces[i][4][2])+(i*110/rfaces.length)).toString()+')';
 }
 
 function renderfaces(faces, rverts) {
@@ -403,19 +395,16 @@ function renderfaces(faces, rverts) {
     ctx.beginPath();
     ctx.fillStyle = depthrand(rfaces, i);
     ctx.moveTo(rverts[index][startvert][0], rverts[index][startvert][1]);
-    for (let j = 1; j < rfaces[i][0].length; j++) {
+    for (let j = 1; j < rfaces[i][0].length; j++)
       ctx.lineTo(rverts[index][rfaces[i][0][j]][0], rverts[index][rfaces[i][0][j]][1]);
-    }
     ctx.closePath();
-    if (outen) {
-      ctx.stroke();
-    };
+    edgesen && ctx.stroke();
     ctx.fill();
   }
 }
 
-document.addEventListener("keydown", (event) => {
-  switch(event.keyCode) {
+document.addEventListener("keydown", e=> {
+  switch(e.keyCode) {
   case 87:
     forewardkey = true;
     break;
@@ -488,7 +477,8 @@ document.addEventListener("keyup", (event) => {
   }
 });
 function mouseMovement(e){
-  document.pointerLockElement === e.target && (cursorX = e.movementX,cursorY = e.movementY);
+  document.pointerLockElement === e.target && (yang+=e.movementX/100,e.movementY != 0 && (xang=settingLockPitch ? Math.max(Math.min(xang+e.movementY/100,Math.PI*0.5),Math.PI*-0.5) : xang+e.movementY/100,tnxang = -Math.tan(xang),horizonDirection = xang<-halfPi ? Math.round(xang/Math.PI)%2===0 : xang>halfPi ? Math.ceil((xang-halfPi)/Math.PI)%2===0 : true));
+  //(Math.floor((xang-Math.PI*0.5)/Math.PI)%2)===0 (Math.round(-xang/Math.PI)%2)!=0)
 }
 function lockRequest(e){
   e.target.requestPointerLock();
@@ -497,18 +487,25 @@ canvas.addEventListener('mousemove',mouseMovement);
 canvas.addEventListener('click',lockRequest);
 canvasElm.addEventListener('click',lockRequest);
 canvasElm.addEventListener('mousemove',mouseMovement);
-resetBall.addEventListener('click',()=>{sphereVelocity=[0,0,0];sphereForce=[0,0,0];cubes[2][1]=[0,10,5];})
+resetBall.addEventListener('click',()=>{sphereVelocity=[0,0,0];sphereForce=[0,0,0];cubes[2][1]=[0,10,5];});
 ctx.font = '25px Arial';
 ctx.fillStyle = 'black';
-ctx.fillText(text, (canvas.width/2)-text.length*6, (canvas.height/2)-25);
+const txtOffset = centerx-text.length*6;
+ctx.fillText(text, txtOffset, centery-25);
+ctx.font = '20px Arial';
+ctx.fillText("Trender By Frostbyte", txtOffset, centery+20);
 fovElm.value = screendist.toString();
 fovElm.addEventListener('input',()=>screendist=fovElm.value,someVar=Math.tan(1.57079632679*screendist));
 faceChk.checked = facesen;
 vertChk.checked = vertsen;
+edgeChk.checked = edgesen;
 statChk.checked = statsen;
+plockChk.checked = settingLockPitch;
 faceChk.addEventListener('change',()=>facesen=!facesen);
 vertChk.addEventListener('change',()=>vertsen=!vertsen);
 statChk.addEventListener('change',()=>statsen=!statsen);
+edgeChk.addEventListener('change',()=>edgesen=!edgesen);
+plockChk.addEventListener('change',()=>settingLockPitch=!settingLockPitch);
 document.getElementById('fullbutton').onclick = function() {
   canvasElm.innerHTML = '<canvas width="1600px" height="900px" id="canvasfull"></canvas><button id="closefullbutton">×<button>';
   canvasElm.className = 'fullscreen';
